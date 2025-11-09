@@ -28,7 +28,7 @@ export default function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthM
 
     try {
       const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/signup';
-      const body = mode === 'login' 
+      const body = mode === 'login'
         ? { email: formData.email, password: formData.password }
         : formData;
 
@@ -134,8 +134,8 @@ export default function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthM
               onClick={onSwitchMode}
               className="text-purple-600 dark:text-purple-400 font-bold hover:underline"
             >
-              {mode === 'login' 
-                ? "Don't have an account? Sign Up" 
+              {mode === 'login'
+                ? "Don't have an account? Sign Up"
                 : 'Already have an account? Login'}
             </button>
           </div>

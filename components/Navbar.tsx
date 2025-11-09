@@ -48,7 +48,7 @@ const Navbar = () => {
       <header className="w-full bg-white dark:bg-gray-800 border-b-4 border-black shadow-[0_4px_0_0_rgba(0,0,0,1)] transition-colors duration-300 sticky top-0 z-50">
         <nav className="nav">
           <Link href="/" className="flex items-center gap-3">
-            <Image 
+            <Image
               src="/assets/images/logo.png"
               width={40}
               height={40}
@@ -73,7 +73,7 @@ const Navbar = () => {
 
           <div className="flex items-center gap-5">
             <ThemeToggle />
-            
+
             {user ? (
               <div className="relative">
                 <button
@@ -82,11 +82,11 @@ const Navbar = () => {
                 >
                   <Image src="/assets/icons/user.svg" alt="user" width={20} height={20} className="invert" />
                   {user.name.split(' ')[0]}
-                  <Image 
-                    src="/assets/icons/chevron-down.svg" 
-                    alt="menu" 
-                    width={16} 
-                    height={16} 
+                  <Image
+                    src="/assets/icons/chevron-down.svg"
+                    alt="menu"
+                    width={16}
+                    height={16}
                     className={`invert transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
                   />
                 </button>

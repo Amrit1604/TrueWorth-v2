@@ -135,7 +135,7 @@ export async function sendContactEmail({
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
           <h1 style="color: white; margin: 0; font-size: 28px;">📬 New Contact Message</h1>
         </div>
-        
+
         <div style="background: #f7fafc; padding: 30px; border: 4px solid #000;">
           <div style="background: white; padding: 20px; border: 3px solid #000; margin-bottom: 20px;">
             <h2 style="color: #2d3748; margin-top: 0;">📝 Message Details</h2>

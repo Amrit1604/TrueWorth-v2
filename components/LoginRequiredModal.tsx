@@ -12,11 +12,11 @@ export default function LoginRequiredModal({ isOpen, onClose, onLogin }: LoginRe
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]"
       onClick={onClose}
     >
-      <div 
+      <div
         className="bg-white dark:bg-gray-800 border-4 border-black dark:border-red-500 shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] dark:shadow-[16px_16px_0px_0px_rgba(239,68,68,0.5)] max-w-lg w-full mx-4 animate-[bounceIn_0.5s_ease-out]"
         onClick={(e) => e.stopPropagation()}
       >
@@ -30,7 +30,7 @@ export default function LoginRequiredModal({ isOpen, onClose, onLogin }: LoginRe
               <div className="text-7xl animate-[slap_0.6s_ease-in-out]">
                 🤚💥
               </div>
-              <Image 
+              <Image
                 src="/assets/icons/red-heart.svg"
                 alt="heart"
                 width={40}
@@ -42,8 +42,8 @@ export default function LoginRequiredModal({ isOpen, onClose, onLogin }: LoginRe
               HOLD UP!
             </h2>
             <p className="text-lg font-bold text-white/90 flex items-center gap-2">
-              Not so fast, buddy! 
-              <Image 
+              Not so fast, buddy!
+              <Image
                 src="/assets/icons/arrow-left.svg"
                 alt="arrow"
                 width={20}
@@ -64,7 +64,7 @@ export default function LoginRequiredModal({ isOpen, onClose, onLogin }: LoginRe
               <div>
                 <h3 className="text-2xl font-black text-black dark:text-yellow-100 mb-2 flex items-center gap-2">
                   LOGIN FIRST, MAN!
-                  <Image 
+                  <Image
                     src="/assets/icons/price-tag.svg"
                     alt="tag"
                     width={24}
@@ -80,7 +80,7 @@ export default function LoginRequiredModal({ isOpen, onClose, onLogin }: LoginRe
 
           <div className="bg-cyan-100 dark:bg-cyan-900 border-4 border-black dark:border-cyan-600 p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(34,211,238,0.5)]">
             <div className="flex items-center gap-3 mb-3">
-              <Image 
+              <Image
                 src="/assets/icons/chart.svg"
                 alt="chart"
                 width={32}

@@ -30,7 +30,7 @@ const isValidProductURL = (url: string) => {
 const Searchbar = () => {
   const [searchPrompt, setSearchPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingTrackUrl, setPendingTrackUrl] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -81,9 +81,9 @@ const Searchbar = () => {
         // Scrape the product page directly
         setHyperspeedMessage('� TRACKING PRODUCT...');
         setShowHyperspeed(true);
-        
+
         const result = await scrapeAndStoreProduct(searchPrompt);
-        
+
         setShowHyperspeed(false);
 
         if (result?.success) {
@@ -96,10 +96,10 @@ const Searchbar = () => {
         // Search by keyword across platforms
         setHyperspeedMessage(`🔍 SEARCHING "${searchPrompt.toUpperCase()}"...`);
         setShowHyperspeed(true);
-        
+
         console.log('🔍 Searching for:', searchPrompt);
         const results = await searchProducts(searchPrompt);
-        
+
         setShowHyperspeed(false);
         console.log('📦 Got results:', results);
 
@@ -141,9 +141,9 @@ const Searchbar = () => {
     try {
       setHyperspeedMessage('📦 ADDING TO YOUR TRACKER...');
       setShowHyperspeed(true);
-      
+
       const result = await scrapeAndStoreProduct(url);
-      
+
       setShowHyperspeed(false);
 
       if (result?.success) {
@@ -164,7 +164,7 @@ const Searchbar = () => {
       {/* Hyperspeed Loading Effect */}
       {showHyperspeed && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center animate-[fadeIn_0.3s_ease-out]">
-          <Hyperspeed message={hyperspeedMessage} />
+          <Hyperspeed />
           <div className="absolute inset-0 flex items-center justify-center z-[10000] pointer-events-none">
             <div className="text-center">
               <h2 className="text-7xl font-black text-white mb-6 animate-pulse tracking-wider">
@@ -213,7 +213,7 @@ const Searchbar = () => {
         />
       )}
 
-      <LoginRequiredModal 
+      <LoginRequiredModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
         onLogin={handleLoginClick}

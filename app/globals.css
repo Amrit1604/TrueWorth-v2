@@ -13,7 +13,7 @@
   body {
     @apply font-inter bg-white dark:bg-gray-900 transition-colors duration-300;
   }
-  
+
   /* Dark mode styles */
   .dark {
     color-scheme: dark;

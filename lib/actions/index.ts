@@ -51,9 +51,9 @@ export async function scrapeAndStoreProduct(productUrl: string) {
     }
 
     // Check if THIS USER already tracks this product
-    const existingProduct = await Product.findOne({ 
+    const existingProduct = await Product.findOne({
       url: scrapedProduct.url,
-      userId: userId 
+      userId: userId
     });
 
     if(existingProduct) {

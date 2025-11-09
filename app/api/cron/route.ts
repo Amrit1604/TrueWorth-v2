@@ -15,7 +15,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function GET(request: Request) {
   const startTime = Date.now();
-  
+
   try {
     await connectToDB();
 
@@ -42,7 +42,7 @@ export async function GET(request: Request) {
         console.log(`\n📦 Processing: ${currentProduct.title}`);
         console.log(`   Platform: ${currentProduct.platform || 'Unknown'}`);
         console.log(`   URL: ${currentProduct.url}`);
-        
+
         // Add 3 second delay between each product to avoid rate limiting
         if (results.updated.length + results.failed.length > 0) {
           console.log(`⏳ Waiting 3 seconds before next product...`);
@@ -52,14 +52,14 @@ export async function GET(request: Request) {
         // Scrape product with timeout
         const scrapedProduct = await Promise.race([
           scrapeProductByPlatform(currentProduct.url),
-          new Promise((_, reject) => 
+          new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Scraping timeout after 45s')), 45000)
           )
         ]) as any;
 
         if (!scrapedProduct || !scrapedProduct.currentPrice) {
           console.log(`❌ Scraping failed or no price found`);
-          
+
           // FALLBACK: Use existing price with timestamp
           const updatedPriceHistory = [
             ...currentProduct.priceHistory,
@@ -71,7 +71,7 @@ export async function GET(request: Request) {
 
           await Product.findOneAndUpdate(
             { url: currentProduct.url },
-            { 
+            {
               priceHistory: updatedPriceHistory,
               lowestPrice: getLowestPrice(updatedPriceHistory),
               highestPrice: getHighestPrice(updatedPriceHistory),
@@ -84,7 +84,7 @@ export async function GET(request: Request) {
             reason: 'Scraping failed - used existing price',
             price: currentProduct.currentPrice
           });
-          
+
           console.log(`⚠️ Skipped - Added existing price to history`);
           continue;
         }
@@ -139,7 +139,7 @@ export async function GET(request: Request) {
             };
             const emailContent = await generateEmailBody(productInfo, emailNotifType);
             const userEmails = updatedProduct.users.map((user: any) => user.email);
-            
+
             await sendEmail(emailContent, userEmails);
             console.log(`📧 Email sent to ${userEmails.length} users - Type: ${emailNotifType}`);
           } catch (emailError: any) {
@@ -149,7 +149,7 @@ export async function GET(request: Request) {
 
       } catch (error: any) {
         console.log(`❌ Error processing ${currentProduct.title}: ${error.message}`);
-        
+
         results.failed.push({
           title: currentProduct.title,
           url: currentProduct.url,
@@ -159,7 +159,7 @@ export async function GET(request: Request) {
     }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    
+
     console.log(`\n✅ Cron job completed in ${duration}s`);
     console.log(`   Updated: ${results.updated.length}`);
     console.log(`   Skipped: ${results.skipped.length}`);
@@ -181,13 +181,13 @@ export async function GET(request: Request) {
         failed: results.failed,
       }
     });
-    
+
   } catch (error: any) {
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`❌ Cron job failed after ${duration}s: ${error.message}`);
-    
+
     return NextResponse.json(
-      { 
+      {
         error: `Cron job failed: ${error.message}`,
         duration: `${duration}s`,
         timestamp: new Date().toISOString(),

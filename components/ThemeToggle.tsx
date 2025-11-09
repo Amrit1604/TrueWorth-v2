@@ -18,11 +18,11 @@ const ThemeToggle = () => {
 
   const toggleTheme = () => {
     setIsAnimating(true);
-    
+
     // Trigger crazy animation
     setTimeout(() => {
       setIsDark(!isDark);
-      
+
       if (!isDark) {
         document.documentElement.classList.add('dark');
         localStorage.setItem('theme', 'dark');
@@ -30,7 +30,7 @@ const ThemeToggle = () => {
         document.documentElement.classList.remove('dark');
         localStorage.setItem('theme', 'light');
       }
-      
+
       setTimeout(() => setIsAnimating(false), 600);
     }, 300);
   };

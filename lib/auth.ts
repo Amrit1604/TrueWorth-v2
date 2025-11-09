@@ -34,9 +34,9 @@ export async function verifyToken(token: string) {
 export async function getSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get('auth-token')?.value;
-  
+
   if (!token) return null;
-  
+
   return await verifyToken(token);
 }
 
@@ -59,7 +59,7 @@ export async function removeAuthCookie() {
 export async function getUserFromRequest(request: NextRequest) {
   const token = request.cookies.get('auth-token')?.value;
   if (!token) return null;
-  
+
   const session = await verifyToken(token);
   return session as { userId: string; email: string } | null;
 }

@@ -39,7 +39,7 @@ export async function universalProductSearch(query: string) {
     // If any platform takes longer, we move on with what we have
     const results = await Promise.race([
       Promise.allSettled(searchPromises),
-      new Promise<any[]>((resolve) => 
+      new Promise<any[]>((resolve) =>
         setTimeout(() => {
           console.log('⏱️ 15s timeout - returning results we have so far');
           resolve([]);

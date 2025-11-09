@@ -137,7 +137,7 @@ const distortions: Distortions = {
       }
       vec3 getDistortion(float progress){
         float movementProgressFix = 0.02;
-        return vec3( 
+        return vec3(
           cos(progress * PI * uFreq.x + uTime) * uAmp.x - cos(movementProgressFix * PI * uFreq.x + uTime) * uAmp.x,
           nsin(progress * PI * uFreq.y + uTime) * uAmp.y - nsin(movementProgressFix * PI * uFreq.y + uTime) * uAmp.y,
           nsin(progress * PI * uFreq.z + uTime) * uAmp.z - nsin(movementProgressFix * PI * uFreq.z + uTime) * uAmp.z
@@ -169,7 +169,7 @@ const distortions: Distortions = {
       #define PI 3.14159265358979
       vec3 getDistortion(float progress){
         float movementProgressFix = 0.02;
-        return vec3( 
+        return vec3(
           cos(progress * PI * uFreq.x + uTime) * uAmp.x - cos(movementProgressFix * PI * uFreq.x + uTime) * uAmp.x,
           sin(progress * PI * uFreq.y + PI/2. + uTime) * uAmp.y - sin(movementProgressFix * PI * uFreq.y + PI/2. + uTime) * uAmp.y,
           0.
@@ -200,7 +200,7 @@ const distortions: Distortions = {
       #define PI 3.14159265358979
       vec3 getDistortion(float progress){
         float camProgress = 0.0125;
-        return vec3( 
+        return vec3(
           sin(progress * PI * uFreq.x + uTime) * uAmp.x - sin(camProgress * PI * uFreq.x + uTime) * uAmp.x,
           sin(progress * PI * uFreq.y + uTime) * uAmp.y - sin(camProgress * PI * uFreq.y + uTime) * uAmp.y,
           0.
@@ -399,7 +399,7 @@ const distortion_vertex = `
     float xFreq = uDistortionX.g;
     float yAmp = uDistortionY.r;
     float yFreq = uDistortionY.g;
-    return vec3( 
+    return vec3(
       xAmp * nsin(progress * PI * xFreq - PI / 2.),
       yAmp * nsin(progress * PI * yFreq - PI / 2.),
       0.
@@ -564,7 +564,7 @@ const carLightsFragment = `
   #define USE_FOG;
   ${THREE.ShaderChunk['fog_pars_fragment']}
   varying vec3 vColor;
-  varying vec2 vUv; 
+  varying vec2 vUv;
   uniform vec2 uFade;
   void main() {
     vec3 color = vec3(vColor);
@@ -583,8 +583,8 @@ const carLightsVertex = `
   attribute vec3 aColor;
   uniform float uTravelLength;
   uniform float uTime;
-  varying vec2 vUv; 
-  varying vec3 vColor; 
+  varying vec2 vUv;
+  varying vec3 vColor;
   #include <getDistortion_vertex>
   void main() {
     vec3 transformed = position.xyz;
@@ -835,7 +835,7 @@ class Road {
 
 const roadBaseFragment = `
   #define USE_FOG;
-  varying vec2 vUv; 
+  varying vec2 vUv;
   uniform vec3 uColor;
   uniform float uTime;
   #include <roadMarkings_vars>
@@ -891,15 +891,15 @@ const roadVertex = `
   uniform float uTime;
   ${THREE.ShaderChunk['fog_pars_vertex']}
   uniform float uTravelLength;
-  varying vec2 vUv; 
+  varying vec2 vUv;
   #include <getDistortion_vertex>
   void main() {
     vec3 transformed = position.xyz;
     vec3 distortion = getDistortion((transformed.y + uTravelLength / 2.) / uTravelLength);
     transformed.x += distortion.x;
     transformed.z += distortion.y;
-    transformed.y += -1. * distortion.z;  
-    
+    transformed.y += -1. * distortion.z;
+
     vec4 mvPosition = modelViewMatrix * vec4(transformed, 1.);
     gl_Position = projectionMatrix * mvPosition;
     vUv = uv;
