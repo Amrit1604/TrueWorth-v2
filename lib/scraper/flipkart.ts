@@ -97,22 +97,41 @@ export async function searchFlipkart(query: string) {
     const searchUrl = `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`;
     const username = String(process.env.BRIGHT_DATA_USERNAME);
     const password = String(process.env.BRIGHT_DATA_PASSWORD);
-    const port = 22225;
-    const session_id = (1000000 * Math.random()) | 0;
-
-    const options = {
-      auth: {
-        username: `${username}-session-${session_id}`,
-        password,
-      },
-      host: 'brd.superproxy.io',
-      port,
-      rejectUnauthorized: false,
-      timeout: 10000, // Reduced to 10 seconds for faster failure
+    
+    if (!username || !password || username === 'undefined' || password === 'undefined') {
+      console.log('⚠️ BrightData credentials not configured, skipping Flipkart search');
+      return [];
     }
 
+    const session_id = Math.random().toString(36).substring(7);
+
     console.log('🔵 Searching Flipkart...');
-    const response = await axios.get(searchUrl, options);
+    const response = await axios.get(searchUrl, {
+      proxy: {
+        host: 'brd.superproxy.io',
+        port: 22225,
+        auth: {
+          username: `${username}-session-${session_id}`,
+          password: password
+        }
+      },
+      timeout: 12000,
+      maxRedirects: 3, // Limit redirects to prevent infinite loops
+      httpsAgent: new (require('https').Agent)({
+        rejectUnauthorized: false
+      }),
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Referer': 'https://www.flipkart.com/',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+
     const $ = cheerio.load(response.data);
 
     const products: any[] = [];

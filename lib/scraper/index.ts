@@ -10,23 +10,76 @@ export async function scrapeAmazonProduct(url: string) {
   // BrightData proxy configuration
   const username = String(process.env.BRIGHT_DATA_USERNAME);
   const password = String(process.env.BRIGHT_DATA_PASSWORD);
-  const port = 22225;
-  const session_id = (1000000 * Math.random()) | 0;
-
-  const options = {
-    auth: {
-      username: `${username}-session-${session_id}`,
-      password,
-    },
-    host: 'brd.superproxy.io',
-    port,
-    rejectUnauthorized: false,
+  
+  if (!username || !password || username === 'undefined' || password === 'undefined') {
+    console.log('⚠️ BrightData credentials not configured, trying direct scraping');
+    return await scrapeAmazonProductDirect(url);
   }
 
+  const session_id = Math.random().toString(36).substring(7);
+
   try {
+    console.log('🌐 Scraping Amazon product with BrightData proxy...');
+    
     // Fetch the product page
-    const response = await axios.get(url, options);
-    const $ = cheerio.load(response.data);
+    const response = await axios.get(url, {
+      proxy: {
+        host: 'brd.superproxy.io',
+        port: 22225,
+        auth: {
+          username: `${username}-session-${session_id}`,
+          password: password
+        }
+      },
+      timeout: 20000,
+      httpsAgent: new (require('https').Agent)({
+        rejectUnauthorized: false // Fix SSL certificate issue
+      }),
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+    
+    return await processAmazonPage(response.data, url);
+  } catch (error: any) {
+    console.log('❌ BrightData proxy failed, trying direct scraping:', error.message);
+    return await scrapeAmazonProductDirect(url);
+  }
+}
+
+async function scrapeAmazonProductDirect(url: string) {
+  try {
+    console.log('🔍 Scraping Amazon product directly (no proxy)...');
+    
+    const response = await axios.get(url, {
+      timeout: 15000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+
+    return await processAmazonPage(response.data, url);
+  } catch (error: any) {
+    console.log('❌ Direct Amazon scraping also failed:', error.message);
+    return null;
+  }
+}
+
+async function processAmazonPage(html: string, url: string) {
+  try {
+    const $ = cheerio.load(html);
 
     // Extract the product title
     const title = $('#productTitle').text().trim();
@@ -80,6 +133,7 @@ export async function scrapeAmazonProduct(url: string) {
 
     return data;
   } catch (error: any) {
-    console.log(error);
+    console.log('❌ Amazon product scraping error:', error.message);
+    return null;
   }
 }

@@ -6,6 +6,8 @@ import { scrapeAmazonProduct } from './index';
 import { scrapeFlipkartProduct, searchFlipkart } from './flipkart';
 import { scrapeSnapdealProduct, searchSnapdeal } from './snapdeal';
 import { scrapeMyntraProduct, searchMyntra } from './myntra';
+import { directAmazonSearch, directFlipkartSearch } from './direct';
+import { directSnapdealSearch } from './directSnapdeal';
 
 export async function universalProductSearch(query: string) {
   try {
@@ -18,16 +20,25 @@ export async function universalProductSearch(query: string) {
     // This ensures slow/failing platforms don't delay fast ones
     const searchPromises = [
       searchAmazonProducts(query).catch(err => {
-        console.log('⚠️ Amazon search failed:', err.message);
-        return [];
+        console.log('⚠️ Amazon proxy search failed, trying direct:', err.message);
+        return directAmazonSearch(query).catch(directErr => {
+          console.log('⚠️ Amazon direct search also failed:', directErr.message);
+          return [];
+        });
       }),
       searchFlipkart(query).catch(err => {
-        console.log('⚠️ Flipkart search failed:', err.message);
-        return [];
+        console.log('⚠️ Flipkart proxy search failed, trying direct:', err.message);
+        return directFlipkartSearch(query).catch(directErr => {
+          console.log('⚠️ Flipkart direct search also failed:', directErr.message);
+          return [];
+        });
       }),
       searchSnapdeal(query).catch(err => {
-        console.log('⚠️ Snapdeal search failed:', err.message);
-        return [];
+        console.log('⚠️ Snapdeal proxy search failed, trying direct:', err.message);
+        return directSnapdealSearch(query).catch(directErr => {
+          console.log('⚠️ Snapdeal direct search also failed:', directErr.message);
+          return [];
+        });
       }),
       searchMyntra(query).catch(err => {
         console.log('⚠️ Myntra search failed:', err.message);
@@ -76,24 +87,41 @@ async function searchAmazonProducts(query: string) {
 
     const username = String(process.env.BRIGHT_DATA_USERNAME);
     const password = String(process.env.BRIGHT_DATA_PASSWORD);
-    const port = 22225;
-    const session_id = (1000000 * Math.random()) | 0;
-
-    const options = {
-      auth: {
-        username: `${username}-session-${session_id}`,
-        password,
-      },
-      host: 'brd.superproxy.io',
-      port,
-      rejectUnauthorized: false,
-      timeout: 10000, // Reduced to 10 seconds
+    
+    if (!username || !password || username === 'undefined' || password === 'undefined') {
+      console.log('⚠️ BrightData credentials not configured, skipping Amazon search');
+      return [];
     }
 
-    console.log('🌐 Fetching from Amazon search...');
-    const response = await axios.get(searchUrl, options);
-    const $ = cheerio.load(response.data);
+    const session_id = Math.random().toString(36).substring(7);
 
+    console.log('🌐 Fetching from Amazon search with BrightData proxy...');
+    
+    const response = await axios.get(searchUrl, {
+      proxy: {
+        host: 'brd.superproxy.io',
+        port: 22225,
+        auth: {
+          username: `${username}-session-${session_id}`,
+          password: password
+        }
+      },
+      timeout: 15000,
+      httpsAgent: new (require('https').Agent)({
+        rejectUnauthorized: false // Fix SSL certificate issue
+      }),
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+
+    const $ = cheerio.load(response.data);
     const products: any[] = [];
 
     // Try multiple Amazon selectors (they change frequently)

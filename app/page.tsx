@@ -5,6 +5,9 @@ import { getAllProducts } from "@/lib/actions"
 import ProductCard from "@/components/ProductCard"
 import VisitorCounter from "@/components/VisitorCounter"
 
+// Force dynamic rendering since we use cookies for user sessions
+export const dynamic = 'force-dynamic'
+
 const Home = async () => {
   const allProducts = await getAllProducts();
 

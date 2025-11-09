@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 let isConnected = false;
+let listenersAdded = false; // Track if event listeners are already added
 
 export const connectToDB = async () => {
   mongoose.set('strictQuery', true);
@@ -16,10 +17,10 @@ export const connectToDB = async () => {
   }
 
   try {
-    // Only set up event listeners once
-    if (!isConnected) {
+    // Only set up event listeners ONCE
+    if (!listenersAdded) {
       // Increase max listeners to handle multiple concurrent requests
-      mongoose.connection.setMaxListeners(50);
+      mongoose.connection.setMaxListeners(100);
 
       mongoose.connection.on('error', (err) => {
         console.log('❌ MongoDB error:', err.message);
@@ -35,6 +36,9 @@ export const connectToDB = async () => {
         console.log('✅ MongoDB connected');
         isConnected = true;
       });
+
+      // Mark listeners as added to prevent duplicates
+      listenersAdded = true;
     }
 
     // Connect if not connected
@@ -42,9 +46,9 @@ export const connectToDB = async () => {
       await mongoose.connect(process.env.MONGODB_URI, {
         serverSelectionTimeoutMS: 10000,
         socketTimeoutMS: 45000,
-        maxPoolSize: 50,        // Increased: Handle 50 simultaneous connections
-        minPoolSize: 5,         // Keep 5 connections always ready
-        maxIdleTimeMS: 30000,   // Close idle connections after 30s
+        maxPoolSize: 10,         // Reduced: Handle 10 simultaneous connections
+        minPoolSize: 2,          // Reduced: Keep 2 connections always ready
+        maxIdleTimeMS: 30000,    // Close idle connections after 30s
         waitQueueTimeoutMS: 5000, // Wait max 5s if all connections busy
       });
 

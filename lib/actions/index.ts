@@ -9,6 +9,7 @@ import { getAveragePrice, getHighestPrice, getLowestPrice } from "../utils";
 import { User } from "@/types";
 import { generateEmailBody, sendEmail } from "../nodemailer";
 import { getSession } from "../auth";
+import mongoose from "mongoose";
 
 export async function searchProducts(query: string) {
   if(!query) return [];
@@ -16,17 +17,58 @@ export async function searchProducts(query: string) {
   try {
     console.log('🔍 Starting search for:', query);
 
-    // Search across multiple platforms
-    const results = await universalProductSearch(query);
-    console.log('📦 Search results:', results.length);
+    // Try web scraping first (primary source)
+    let webResults: any[] = [];
+    try {
+      console.log('🌐 Attempting web scraping...');
+      webResults = await universalProductSearch(query);
+      console.log(`🌐 Found ${webResults.length} products from web scraping`);
+    } catch (webError: any) {
+      console.log('⚠️ Web scraping failed:', webError.message);
+    }
 
-    if (results.length === 0) {
-      console.log('❌ No results found');
+    // If web scraping found results, return those
+    if (webResults.length > 0) {
+      console.log(`✅ Returning ${webResults.length} web scraping results`);
+      return webResults;
+    }
+
+    // Fallback to database search only if web scraping failed
+    console.log('💾 Falling back to database search...');
+    let dbResults: any[] = [];
+    try {
+      await connectToDB();
+      const existingProducts = await Product.find({
+        $or: [
+          { title: { $regex: query, $options: 'i' } },
+          { category: { $regex: query, $options: 'i' } },
+          { description: { $regex: query, $options: 'i' } }
+        ]
+      }).limit(20).lean();
+      
+      dbResults = existingProducts.map(product => ({
+        title: product.title,
+        price: product.currentPrice,
+        originalPrice: product.originalPrice,
+        image: product.image,
+        url: product.url,
+        platform: product.platform || 'Database',
+        id: product._id
+      }));
+      
+      console.log(`💾 Found ${dbResults.length} products in database`);
+    } catch (dbError: any) {
+      console.log('⚠️ Database search failed:', dbError.message);
+    }
+
+    console.log(`📦 Total results: ${dbResults.length}`);
+
+    if (dbResults.length === 0) {
+      console.log('❌ No results found from any source');
       return [];
     }
 
-    // Return results directly for display (don't store yet)
-    return results;
+    return dbResults;
   } catch (error: any) {
     console.error(`❌ Failed to search products: ${error.message}`);
     throw error;
@@ -135,21 +177,36 @@ export async function getAllProducts() {
   try {
     await connectToDB();
 
+    // Check if connection is actually established
+    if (!mongoose.connection.readyState) {
+      console.log('❌ MongoDB not connected');
+      return [];
+    }
+
     const session = await getSession();
     const userId = session ? (session.userId as string) : null;
+
+    console.log('🔍 Getting products for user:', userId ? 'logged-in user' : 'guest');
 
     let products;
     if (userId) {
       // If logged in, only get products that belong to this user
       products = await Product.find({ userId: userId }).lean();
+      console.log(`📦 Found ${products.length} products for logged-in user`);
     } else {
       // If not logged in, only get guest products
       products = await Product.find({ userId: null }).lean();
+      console.log(`📦 Found ${products.length} guest products`);
     }
 
     return JSON.parse(JSON.stringify(products));
-  } catch (error) {
-    console.log('⚠️ Database error, returning empty list');
+  } catch (error: any) {
+    console.log('⚠️ Database error in getAllProducts:', error.message);
+    console.log('Error details:', {
+      name: error.name,
+      code: error.code,
+      stack: error.stack?.split('\n')[0]
+    });
     return [];
   }
 }

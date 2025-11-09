@@ -48,6 +48,7 @@ export async function setAuthCookie(token: string) {
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7, // 7 days
     path: '/',
+    domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost', // Let browser handle domain in production
   });
 }
 

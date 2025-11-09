@@ -89,25 +89,42 @@ export async function scrapeSnapdealProduct(url: string) {
 
 export async function searchSnapdeal(query: string) {
   try {
-    const searchUrl = `https://www.snapdeal.com/search?keyword=${encodeURIComponent(query)}`;
+    const searchUrl = `https://www.snapdeal.com/search?keyword=${encodeURIComponent(query)}&santizedKeyword=&catId=&categoryId=0&suggested=false&vertical=&noOfResults=20&searchState=&clickSrc=&lastKeyword=&prodCatId=&changeBackToAll=false&foundInAll=false&categoryName=&remediation=false&searchKeyword=${encodeURIComponent(query)}`;
     const username = String(process.env.BRIGHT_DATA_USERNAME);
     const password = String(process.env.BRIGHT_DATA_PASSWORD);
-    const port = 22225;
-    const session_id = (1000000 * Math.random()) | 0;
-
-    const options = {
-      auth: {
-        username: `${username}-session-${session_id}`,
-        password,
-      },
-      host: 'brd.superproxy.io',
-      port,
-      rejectUnauthorized: false,
-      timeout: 10000, // Reduced to 10 seconds for faster failure
+    
+    if (!username || !password || username === 'undefined' || password === 'undefined') {
+      console.log('⚠️ BrightData credentials not configured, skipping Snapdeal search');
+      return [];
     }
 
+    const session_id = Math.random().toString(36).substring(7);
+
     console.log('🟠 Searching Snapdeal...');
-    const response = await axios.get(searchUrl, options);
+    const response = await axios.get(searchUrl, {
+      proxy: {
+        host: 'brd.superproxy.io',
+        port: 22225,
+        auth: {
+          username: `${username}-session-${session_id}`,
+          password: password
+        }
+      },
+      timeout: 12000,
+      httpsAgent: new (require('https').Agent)({
+        rejectUnauthorized: false
+      }),
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Referer': 'https://www.snapdeal.com/',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
     const $ = cheerio.load(response.data);
 
     const products: any[] = [];
