@@ -1,21 +1,54 @@
 import mongoose from 'mongoose';
 
-let isConnected = false;// Variable to track the connection status
+let isConnected = false;
 
 export const connectToDB = async () => {
   mongoose.set('strictQuery', true);
 
-  if(!process.env.MONGODB_URI) return console.log('MONGODB_URI is not defined');
+  if(!process.env.MONGODB_URI) {
+    console.log('❌ MONGODB_URI is not defined');
+    return;
+  }
 
-  if(isConnected) return console.log('=> using existing database connection');
+  // If already connected, return immediately
+  if(isConnected && mongoose.connection.readyState === 1) {
+    return;
+  }
 
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    // Only set up event listeners once
+    if (!isConnected) {
+      // Increase max listeners to prevent warning
+      mongoose.connection.setMaxListeners(20);
 
-    isConnected = true;
+      mongoose.connection.on('error', (err) => {
+        console.log('❌ MongoDB error:', err.message);
+        isConnected = false;
+      });
 
-    console.log('MongoDB Connected');
-  } catch (error) {
-    console.log(error)
+      mongoose.connection.on('disconnected', () => {
+        isConnected = false;
+      });
+
+      mongoose.connection.on('connected', () => {
+        isConnected = true;
+      });
+    }
+
+    // Connect if not connected
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        maxPoolSize: 10,
+        minPoolSize: 2,
+      });
+
+      isConnected = true;
+    }
+
+  } catch (error: any) {
+    console.log('❌ MongoDB failed:', error.message);
+    isConnected = false;
   }
 }

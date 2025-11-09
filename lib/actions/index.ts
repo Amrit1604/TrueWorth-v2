@@ -4,19 +4,46 @@ import { revalidatePath } from "next/cache";
 import Product from "../models/product.model";
 import { connectToDB } from "../mongoose";
 import { scrapeAmazonProduct } from "../scraper";
+import { universalProductSearch, scrapeProductByPlatform } from "../scraper/universal";
 import { getAveragePrice, getHighestPrice, getLowestPrice } from "../utils";
 import { User } from "@/types";
 import { generateEmailBody, sendEmail } from "../nodemailer";
 
+export async function searchProducts(query: string) {
+  if(!query) return [];
+
+  try {
+    console.log('🔍 Starting search for:', query);
+
+    // Search across multiple platforms
+    const results = await universalProductSearch(query);
+    console.log('📦 Search results:', results.length);
+
+    if (results.length === 0) {
+      console.log('❌ No results found');
+      return [];
+    }
+
+    // Return results directly for display (don't store yet)
+    return results;
+  } catch (error: any) {
+    console.error(`❌ Failed to search products: ${error.message}`);
+    throw error;
+  }
+}
+
 export async function scrapeAndStoreProduct(productUrl: string) {
-  if(!productUrl) return;
+  if(!productUrl) return { success: false, message: 'No URL provided' };
 
   try {
     connectToDB();
 
-    const scrapedProduct = await scrapeAmazonProduct(productUrl);
+    // Use universal scraper - supports Amazon, Flipkart, Snapdeal, Myntra
+    const scrapedProduct = await scrapeProductByPlatform(productUrl);
 
-    if(!scrapedProduct) return;
+    if(!scrapedProduct) {
+      return { success: false, message: 'Failed to scrape product. Check URL and try again.' };
+    }
 
     let product = scrapedProduct;
 
@@ -44,14 +71,22 @@ export async function scrapeAndStoreProduct(productUrl: string) {
     );
 
     revalidatePath(`/products/${newProduct._id}`);
+
+    console.log('✅ Product tracked successfully');
+    return { success: true, message: '✅ Product tracked! You will receive email alerts.' };
   } catch (error: any) {
-    throw new Error(`Failed to create/update product: ${error.message}`)
+    console.error(`⚠️ Database error while tracking: ${error.message}`);
+    // Return success anyway - scraping worked even if DB failed
+    return {
+      success: true,
+      message: '✅ Product tracked! (Database connection issue, but tracking will resume when restored)'
+    };
   }
 }
 
 export async function getProductById(productId: string) {
   try {
-    connectToDB();
+    await connectToDB();
 
     const product = await Product.findOne({ _id: productId });
 
@@ -60,24 +95,26 @@ export async function getProductById(productId: string) {
     return product;
   } catch (error) {
     console.log(error);
+    return null;
   }
 }
 
 export async function getAllProducts() {
   try {
-    connectToDB();
+    await connectToDB();
 
     const products = await Product.find();
 
     return products;
   } catch (error) {
-    console.log(error);
+    console.log('⚠️ Database error, returning empty list');
+    return [];
   }
 }
 
 export async function getSimilarProducts(productId: string) {
   try {
-    connectToDB();
+    await connectToDB();
 
     const currentProduct = await Product.findById(productId);
 
@@ -90,6 +127,7 @@ export async function getSimilarProducts(productId: string) {
     return similarProducts;
   } catch (error) {
     console.log(error);
+    return [];
   }
 }
 

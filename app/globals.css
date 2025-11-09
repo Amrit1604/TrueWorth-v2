@@ -21,11 +21,13 @@
   }
 
   .head-text {
-    @apply mt-4 text-6xl leading-[72px] font-bold tracking-[-1.2px] text-gray-900;
+    @apply mt-4 text-6xl leading-[72px] font-black tracking-[-1.2px] text-gray-900;
+    text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
   }
 
   .section-text {
-    @apply text-secondary text-[32px] font-semibold;
+    @apply text-black text-4xl font-black;
+    text-shadow: 3px 3px 0px #FFD700;
   }
 
   .small-text {

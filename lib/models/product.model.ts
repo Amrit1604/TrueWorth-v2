@@ -2,13 +2,14 @@ import mongoose from 'mongoose';
 
 const productSchema = new mongoose.Schema({
   url: { type: String, required: true, unique: true },
+  platform: { type: String, default: 'Amazon' }, // Amazon, Flipkart, Snapdeal, etc.
   currency: { type: String, required: true },
   image: { type: String, required: true },
   title: { type: String, required: true },
   currentPrice: { type: Number, required: true },
   originalPrice: { type: Number, required: true },
   priceHistory: [
-    { 
+    {
       price: { type: Number, required: true },
       date: { type: Date, default: Date.now }
     },

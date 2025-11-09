@@ -1,16 +1,17 @@
 import Navbar from '@/components/Navbar'
+import ToastProvider from '@/components/ToastProvider'
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter, Space_Grotesk } from 'next/font/google'
 
 const inter = Inter({ subsets: ['latin'] })
-const spaceGrotesk = Space_Grotesk({ 
-  subsets: ['latin'], 
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700']
  })
 
 export const metadata: Metadata = {
-  title: 'Pricewise',
+  title: 'InsureInfo - By Amrit',
   description: 'Track product prices effortlessly and save money on your online shopping.',
 }
 
@@ -26,6 +27,7 @@ export default function RootLayout({
           <Navbar />
           {children}
         </main>
+        <ToastProvider />
       </body>
     </html>
   )
