@@ -10,19 +10,19 @@ const Home = async () => {
 
   // Calculate analytics stats
   const totalProducts = allProducts?.length || 0;
-  const totalSavings = allProducts?.reduce((acc, product) => {
+  const totalSavings = allProducts?.reduce((acc: number, product: any) => {
     const discount = product.originalPrice - product.currentPrice;
     return acc + discount;
   }, 0) || 0;
   const averageDiscount = allProducts?.length > 0
-    ? Math.round(allProducts.reduce((acc, product) => {
+    ? Math.round(allProducts.reduce((acc: number, product: any) => {
         const discount = ((product.originalPrice - product.currentPrice) / product.originalPrice) * 100;
         return acc + discount;
       }, 0) / allProducts.length)
     : 15; // Default value for demo
 
   // Platform statistics
-  const platformStats = allProducts?.reduce((acc: any, product) => {
+  const platformStats = allProducts?.reduce((acc: any, product: any) => {
     const platform = product.platform || 'Amazon';
     if (!acc[platform]) {
       acc[platform] = { platform, count: 0, totalPrice: 0 };
@@ -146,7 +146,7 @@ const Home = async () => {
 
         <div className="flex flex-wrap gap-x-8 gap-y-16">
           {allProducts && allProducts.length > 0 ? (
-            allProducts.map((product) => (
+            allProducts.map((product: any) => (
               <ProductCard key={product._id} product={product} />
             ))
           ) : (
