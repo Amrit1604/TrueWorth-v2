@@ -23,15 +23,9 @@ const SearchResults = ({ results, onTrackProduct }: Props) => {
 
   const handleTrack = async (url: string) => {
     setTracking(url);
-    const result = await onTrackProduct(url);
+    await onTrackProduct(url);
     setTracking('');
-
-    // Show success/error message
-    if (result?.success) {
-      alert(result.message || 'Product is now being tracked!');
-    } else {
-      alert(result?.message || 'Failed to track product. Please try again.');
-    }
+    // Toast handles success/error messages now
   };
 
   if (results.length === 0) {
@@ -95,8 +89,8 @@ const SearchResults = ({ results, onTrackProduct }: Props) => {
         </div>
       </div>
 
-      {/* Comic Products Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {/* Comic Products Grid - Added more spacing */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         {sortedResults.map((product, index) => (
           <div
             key={`${product.platform}-${index}`}

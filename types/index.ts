@@ -1,5 +1,6 @@
 export type PriceHistoryItem = {
   price: number;
+  date: Date | string; // Date when price was recorded - ESSENTIAL for price history graph!
 };
 
 export type User = {

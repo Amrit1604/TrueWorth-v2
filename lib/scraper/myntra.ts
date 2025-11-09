@@ -19,7 +19,7 @@ export async function scrapeMyntraProduct(url: string) {
     host: 'brd.superproxy.io',
     port,
     rejectUnauthorized: false,
-    timeout: 30000,
+    timeout: 10000, // Reduced to 10 seconds for faster failure
   }
 
   try {
@@ -97,7 +97,7 @@ export async function searchMyntra(query: string) {
       host: 'brd.superproxy.io',
       port,
       rejectUnauthorized: false,
-      timeout: 30000,
+      timeout: 10000, // Reduced to 10 seconds for faster failure
     }
 
     console.log('🟣 Searching Myntra...');

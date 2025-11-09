@@ -8,6 +8,7 @@ import { universalProductSearch, scrapeProductByPlatform } from "../scraper/univ
 import { getAveragePrice, getHighestPrice, getLowestPrice } from "../utils";
 import { User } from "@/types";
 import { generateEmailBody, sendEmail } from "../nodemailer";
+import { getSession } from "../auth";
 
 export async function searchProducts(query: string) {
   if(!query) return [];
@@ -38,6 +39,10 @@ export async function scrapeAndStoreProduct(productUrl: string) {
   try {
     connectToDB();
 
+    // Get the current logged-in user
+    const session = await getSession();
+    const userId = session ? (session.userId as string) : null;
+
     // Use universal scraper - supports Amazon, Flipkart, Snapdeal, Myntra
     const scrapedProduct = await scrapeProductByPlatform(productUrl);
 
@@ -45,41 +50,56 @@ export async function scrapeAndStoreProduct(productUrl: string) {
       return { success: false, message: 'Failed to scrape product. Check URL and try again.' };
     }
 
-    let product = scrapedProduct;
-
-    const existingProduct = await Product.findOne({ url: scrapedProduct.url });
+    // Check if THIS USER already tracks this product
+    const existingProduct = await Product.findOne({ 
+      url: scrapedProduct.url,
+      userId: userId 
+    });
 
     if(existingProduct) {
+      // User already tracks this product - update price history
       const updatedPriceHistory: any = [
         ...existingProduct.priceHistory,
-        { price: scrapedProduct.currentPrice }
+        { price: scrapedProduct.currentPrice, date: new Date() }
       ]
 
-      product = {
+      const updatedProduct = await Product.findOneAndUpdate(
+        { url: scrapedProduct.url, userId: userId },
+        {
+          currentPrice: scrapedProduct.currentPrice,
+          priceHistory: updatedPriceHistory,
+          lowestPrice: getLowestPrice(updatedPriceHistory),
+          highestPrice: getHighestPrice(updatedPriceHistory),
+          averagePrice: getAveragePrice(updatedPriceHistory),
+        },
+        { new: true }
+      );
+
+      revalidatePath(`/products/${updatedProduct._id}`);
+      console.log('✅ Product updated for user');
+      return { success: true, message: '✅ Product updated! Price history refreshed.' };
+    } else {
+      // New product for this user - create new entry
+      const newProduct = new Product({
         ...scrapedProduct,
-        priceHistory: updatedPriceHistory,
-        lowestPrice: getLowestPrice(updatedPriceHistory),
-        highestPrice: getHighestPrice(updatedPriceHistory),
-        averagePrice: getAveragePrice(updatedPriceHistory),
-      }
+        userId: userId, // Associate with logged-in user (null for guests)
+        priceHistory: [{ price: scrapedProduct.currentPrice, date: new Date() }],
+        lowestPrice: scrapedProduct.currentPrice,
+        highestPrice: scrapedProduct.currentPrice,
+        averagePrice: scrapedProduct.currentPrice,
+      });
+
+      await newProduct.save();
+
+      revalidatePath(`/products/${newProduct._id}`);
+      console.log('✅ Product tracked successfully for user');
+      return { success: true, message: '✅ Product tracked! You will receive email alerts.' };
     }
-
-    const newProduct = await Product.findOneAndUpdate(
-      { url: scrapedProduct.url },
-      product,
-      { upsert: true, new: true }
-    );
-
-    revalidatePath(`/products/${newProduct._id}`);
-
-    console.log('✅ Product tracked successfully');
-    return { success: true, message: '✅ Product tracked! You will receive email alerts.' };
   } catch (error: any) {
     console.error(`⚠️ Database error while tracking: ${error.message}`);
-    // Return success anyway - scraping worked even if DB failed
     return {
-      success: true,
-      message: '✅ Product tracked! (Database connection issue, but tracking will resume when restored)'
+      success: false,
+      message: '❌ Failed to track product. Please try again.'
     };
   }
 }
@@ -88,11 +108,23 @@ export async function getProductById(productId: string) {
   try {
     await connectToDB();
 
-    const product = await Product.findOne({ _id: productId });
+    const session = await getSession();
+    const userId = session ? (session.userId as string) : null;
+
+    const query: any = { _id: productId };
+    if (userId) {
+      // If logged in, only get products that belong to this user
+      query.userId = userId;
+    } else {
+      // If not logged in, only get guest products
+      query.userId = null;
+    }
+
+    const product = await Product.findOne(query).lean();
 
     if(!product) return null;
 
-    return product;
+    return JSON.parse(JSON.stringify(product));
   } catch (error) {
     console.log(error);
     return null;
@@ -103,9 +135,19 @@ export async function getAllProducts() {
   try {
     await connectToDB();
 
-    const products = await Product.find();
+    const session = await getSession();
+    const userId = session ? (session.userId as string) : null;
 
-    return products;
+    let products;
+    if (userId) {
+      // If logged in, only get products that belong to this user
+      products = await Product.find({ userId: userId }).lean();
+    } else {
+      // If not logged in, only get guest products
+      products = await Product.find({ userId: null }).lean();
+    }
+
+    return JSON.parse(JSON.stringify(products));
   } catch (error) {
     console.log('⚠️ Database error, returning empty list');
     return [];
@@ -116,15 +158,27 @@ export async function getSimilarProducts(productId: string) {
   try {
     await connectToDB();
 
+    const session = await getSession();
+    const userId = session ? (session.userId as string) : null;
+
     const currentProduct = await Product.findById(productId);
 
     if(!currentProduct) return null;
 
-    const similarProducts = await Product.find({
+    const query: any = {
       _id: { $ne: productId },
-    }).limit(3);
+    };
 
-    return similarProducts;
+    // Only show similar products from the same user
+    if (userId) {
+      query.userId = userId;
+    } else {
+      query.userId = null;
+    }
+
+    const similarProducts = await Product.find(query).limit(3).lean();
+
+    return JSON.parse(JSON.stringify(similarProducts));
   } catch (error) {
     console.log(error);
     return [];

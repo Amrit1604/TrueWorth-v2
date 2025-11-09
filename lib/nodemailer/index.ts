@@ -29,7 +29,7 @@ export async function generateEmailBody(
       subject = `Welcome to Price Tracking for ${shortenedTitle}`;
       body = `
         <div>
-          <h2>Welcome to InsureInfo 🚀</h2>
+          <h2>Welcome to TrueWorth 🚀</h2>
           <p>You are now tracking ${product.title}.</p>
           <p>Here's an example of how you'll receive updates:</p>
           <div style="border: 1px solid #ccc; padding: 10px; background-color: #f8f8f8;">
@@ -104,4 +104,60 @@ export const sendEmail = async (emailContent: EmailContent, sendTo: string[]) =>
 
     console.log('Email sent: ', info);
   })
+}
+
+export async function sendContactEmail({
+  name,
+  email,
+  subject,
+  message,
+}: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}) {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: process.env.EMAIL_USER,
+    replyTo: email,
+    subject: `TrueWorth Contact: ${subject}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">📬 New Contact Message</h1>
+        </div>
+        
+        <div style="background: #f7fafc; padding: 30px; border: 4px solid #000;">
+          <div style="background: white; padding: 20px; border: 3px solid #000; margin-bottom: 20px;">
+            <h2 style="color: #2d3748; margin-top: 0;">📝 Message Details</h2>
+            <p style="margin: 10px 0;"><strong>From:</strong> ${name}</p>
+            <p style="margin: 10px 0;"><strong>Email:</strong> ${email}</p>
+            <p style="margin: 10px 0;"><strong>Subject:</strong> ${subject}</p>
+          </div>
+
+          <div style="background: white; padding: 20px; border: 3px solid #000;">
+            <h3 style="color: #2d3748; margin-top: 0;">💬 Message:</h3>
+            <p style="color: #4a5568; line-height: 1.6; white-space: pre-wrap;">${message}</p>
+          </div>
+        </div>
+
+        <div style="background: #2d3748; padding: 20px; text-align: center;">
+          <p style="color: #cbd5e0; margin: 0; font-size: 14px;">
+            Reply directly to this email to respond to ${name}
+          </p>
+        </div>
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
 }

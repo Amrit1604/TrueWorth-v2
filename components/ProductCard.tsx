@@ -21,9 +21,9 @@ const ProductCard = ({ product }: Props) => {
   return (
     <Link
       href={`/products/${product._id}`}
-      className="block bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 hover:-translate-y-1 w-full max-w-sm"
+      className="block bg-white dark:bg-gray-800 border-4 border-black dark:border-purple-500 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(168,85,247,0.5)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[12px_12px_0px_0px_rgba(168,85,247,0.8)] transition-all duration-200 hover:-translate-y-1 w-full max-w-sm"
     >
-      <div className="relative h-48 bg-white border-b-4 border-black overflow-hidden">
+      <div className="relative h-48 bg-white dark:bg-gray-700 border-b-4 border-black dark:border-purple-500 overflow-hidden">
         <Image
           src={product.image}
           alt={product.title}
@@ -40,17 +40,17 @@ const ProductCard = ({ product }: Props) => {
       </div>
 
       <div className="p-4">
-        <h3 className="text-base font-bold text-black mb-2 line-clamp-2 min-h-[48px]">
+        <h3 className="text-base font-bold text-black dark:text-white mb-2 line-clamp-2 min-h-[48px]">
           {product.title}
         </h3>
 
         <div className="flex justify-between items-center">
-          <p className="text-gray-600 text-sm font-bold uppercase">
+          <p className="text-gray-600 dark:text-gray-400 text-sm font-bold uppercase">
             {product.category}
           </p>
 
-          <div className="bg-green-400 border-2 border-black px-3 py-1">
-            <p className="text-black text-lg font-black">
+          <div className="bg-green-400 dark:bg-green-600 border-2 border-black dark:border-green-400 px-3 py-1">
+            <p className="text-black dark:text-white text-lg font-black">
               {product?.currency}{product?.currentPrice}
             </p>
           </div>

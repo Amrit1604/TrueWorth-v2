@@ -20,7 +20,7 @@ export async function scrapeFlipkartProduct(url: string) {
     host: 'brd.superproxy.io',
     port,
     rejectUnauthorized: false,
-    timeout: 30000,
+    timeout: 10000, // Reduced to 10 seconds for faster failure
   }
 
   try {
@@ -108,7 +108,7 @@ export async function searchFlipkart(query: string) {
       host: 'brd.superproxy.io',
       port,
       rejectUnauthorized: false,
-      timeout: 30000,
+      timeout: 10000, // Reduced to 10 seconds for faster failure
     }
 
     console.log('🔵 Searching Flipkart...');

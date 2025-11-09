@@ -12,43 +12,51 @@ export async function universalProductSearch(query: string) {
     console.log('🔍 Universal search starting for:', query);
     console.log('🌐 Searching across Amazon, Flipkart, Snapdeal, Myntra...');
 
-    // Search all platforms in parallel
-    const [amazonResults, flipkartResults, snapdealResults, myntraResults] = await Promise.allSettled([
-      searchAmazonProducts(query),
-      searchFlipkart(query),
-      searchSnapdeal(query),
-      searchMyntra(query)
-    ]);
-
     const allResults: any[] = [];
 
-    // Combine results from all platforms
-    if (amazonResults.status === 'fulfilled') {
-      console.log(`✅ Amazon: ${amazonResults.value.length} products`);
-      allResults.push(...amazonResults.value);
-    } else {
-      console.log('⚠️ Amazon search failed:', amazonResults.reason?.message);
-    }
+    // Search platforms in parallel with FAST TIMEOUT (10 seconds each)
+    // This ensures slow/failing platforms don't delay fast ones
+    const searchPromises = [
+      searchAmazonProducts(query).catch(err => {
+        console.log('⚠️ Amazon search failed:', err.message);
+        return [];
+      }),
+      searchFlipkart(query).catch(err => {
+        console.log('⚠️ Flipkart search failed:', err.message);
+        return [];
+      }),
+      searchSnapdeal(query).catch(err => {
+        console.log('⚠️ Snapdeal search failed:', err.message);
+        return [];
+      }),
+      searchMyntra(query).catch(err => {
+        console.log('⚠️ Myntra search failed:', err.message);
+        return [];
+      })
+    ];
 
-    if (flipkartResults.status === 'fulfilled') {
-      console.log(`✅ Flipkart: ${flipkartResults.value.length} products`);
-      allResults.push(...flipkartResults.value);
-    } else {
-      console.log('⚠️ Flipkart search failed:', flipkartResults.reason?.message);
-    }
+    // Wait maximum 15 seconds for all platforms
+    // If any platform takes longer, we move on with what we have
+    const results = await Promise.race([
+      Promise.allSettled(searchPromises),
+      new Promise<any[]>((resolve) => 
+        setTimeout(() => {
+          console.log('⏱️ 15s timeout - returning results we have so far');
+          resolve([]);
+        }, 15000)
+      )
+    ]);
 
-    if (snapdealResults.status === 'fulfilled') {
-      console.log(`✅ Snapdeal: ${snapdealResults.value.length} products`);
-      allResults.push(...snapdealResults.value);
-    } else {
-      console.log('⚠️ Snapdeal search failed:', snapdealResults.reason?.message);
-    }
-
-    if (myntraResults.status === 'fulfilled') {
-      console.log(`✅ Myntra: ${myntraResults.value.length} products`);
-      allResults.push(...myntraResults.value);
-    } else {
-      console.log('⚠️ Myntra search failed:', myntraResults.reason?.message);
+    // Collect results from successful platforms
+    if (Array.isArray(results)) {
+      for (const result of results) {
+        if (result.status === 'fulfilled' && Array.isArray(result.value)) {
+          allResults.push(...result.value);
+          if (result.value.length > 0) {
+            console.log(`✅ Got ${result.value.length} products from a platform`);
+          }
+        }
+      }
     }
 
     // Sort by price (cheapest first)
@@ -79,7 +87,7 @@ async function searchAmazonProducts(query: string) {
       host: 'brd.superproxy.io',
       port,
       rejectUnauthorized: false,
-      timeout: 30000,
+      timeout: 10000, // Reduced to 10 seconds
     }
 
     console.log('🌐 Fetching from Amazon search...');
