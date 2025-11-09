@@ -63,7 +63,7 @@ export default function DebugPage() {
       // Also get the credential check
       const checkRes = await fetch('/api/check-brightdata')
       const checkData = await checkRes.json()
-      setBrightDataStatus(prev => ({ ...prev, credentialCheck: checkData }))
+      setBrightDataStatus((prev: any) => ({ ...prev, credentialCheck: checkData }))
     } catch (error: any) {
       setBrightDataStatus({ error: error.message })
     }
