@@ -18,8 +18,7 @@ export async function GET() {
 
     const user = await User.findById(session.userId)
       .select('-password')
-      .populate('trackedProducts')
-      .lean();
+      .populate('trackedProducts');
 
     if (!user) {
       return NextResponse.json(
@@ -30,10 +29,10 @@ export async function GET() {
 
     return NextResponse.json({
       user: {
-        id: (user as any)._id,
-        name: (user as any).name,
-        email: (user as any).email,
-        trackedProducts: (user as any).trackedProducts,
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        trackedProducts: user.trackedProducts,
       },
     });
   } catch (error) {
