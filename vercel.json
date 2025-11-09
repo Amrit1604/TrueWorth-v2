@@ -1,0 +1,17 @@
+{
+  "buildCommand": "npm run build",
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 0 * * *"
+    }
+  ],
+  "env": {
+    "MONGODB_URI": "@mongodb_uri",
+    "BRIGHT_DATA_USERNAME": "@bright_data_username",
+    "BRIGHT_DATA_PASSWORD": "@bright_data_password",
+    "EMAIL_USER": "@email_user",
+    "EMAIL_PASS": "@email_pass"
+  }
+}

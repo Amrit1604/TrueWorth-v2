@@ -174,19 +174,25 @@ async function searchAmazonProducts(query: string) {
 export async function scrapeProductByPlatform(url: string) {
   console.log('🔍 Detecting platform for URL:', url);
 
-  if (url.includes('flipkart.com')) {
-    console.log('🔵 Detected: Flipkart');
-    return await scrapeFlipkartProduct(url);
-  } else if (url.includes('amazon')) {
-    console.log('🟠 Detected: Amazon');
-    return await scrapeAmazonProduct(url);
-  } else if (url.includes('snapdeal.com')) {
-    console.log('🟠 Detected: Snapdeal');
-    return await scrapeSnapdealProduct(url);
-  } else if (url.includes('myntra.com')) {
-    console.log('🟣 Detected: Myntra');
-    return await scrapeMyntraProduct(url);
+  try {
+    if (url.includes('flipkart.com')) {
+      console.log('🔵 Detected: Flipkart');
+      return await scrapeFlipkartProduct(url);
+    } else if (url.includes('amazon')) {
+      console.log('🟠 Detected: Amazon');
+      return await scrapeAmazonProduct(url);
+    } else if (url.includes('snapdeal.com')) {
+      console.log('🟠 Detected: Snapdeal');
+      return await scrapeSnapdealProduct(url);
+    } else if (url.includes('myntra.com')) {
+      console.log('🟣 Detected: Myntra');
+      return await scrapeMyntraProduct(url);
+    } else {
+      console.log('❌ Unknown platform');
+      return null;
+    }
+  } catch (error: any) {
+    console.log(`❌ Platform scraping failed: ${error.message}`);
+    return null;
   }
-
-  throw new Error('Unsupported platform. Supported: Amazon, Flipkart, Snapdeal, Myntra');
 }
